@@ -51,7 +51,7 @@ if __name__ == "__main__":
     imsave(name+"_epochs"+str(epoch)+"_img_result.png", lab2rgb(cur))
     imsave(name+"_img_gray_version.png", rgb2gray(lab2rgb(cur)))
 
-    COLORE_NET.save('/LEARN_DATA/')
+    COLORE_NET.save('My_Net.h5')
 
 
 
