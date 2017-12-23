@@ -13,7 +13,7 @@ if __name__ == "__main__":
     image = np.array(image, dtype=float)
     X = rgb2lab(1.0 / 255 * image)[:, :, 0]
     X = X.reshape(1, 400, 400, 1)
-    COLORE_NET = load_model('My_Net.h5')
+    COLORE_NET = load_model('LEARN_DATA/My_Net.h5')
 
     output = COLORE_NET.predict(X)
     output *= 128
