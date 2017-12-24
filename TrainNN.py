@@ -36,7 +36,7 @@ if __name__ == "__main__":
     batch_size = 20
     tf.reset_default_graph()
     tensorboard = TensorBoard(log_dir="/output")
-    epoch = 1000
+    epoch = 10
     X = []
     for filename in os.listdir('TrainSet/RGB/'):
         X.append(img_to_array(load_img('TrainSet/RGB/' + filename)))
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         zoom_range=0.4,
         rotation_range=40,
         horizontal_flip=True)
-    COLOR_NET.fit_generator(image_a_b_gen(batch_size, datagen), callbacks=[tensorboard], epochs=1000, steps_per_epoch=20)
+    COLOR_NET.fit_generator(image_a_b_gen(batch_size, datagen), callbacks=[tensorboard], epochs=epoch, steps_per_epoch=20)
     COLOR_NET.save('LEARN_DATA/My_Net.h5')
     model_json = COLOR_NET.to_json()
     with open("model.json", "w") as json_file:
@@ -97,7 +97,6 @@ if __name__ == "__main__":
     Paint_img_embed = create_inception_embedding(Paint_img)
     Paint_img = rgb2lab(Paint_img)[:, :, :, 0]
     Paint_img = Paint_img.reshape(Paint_img.shape + (1,))
-
 
     output = COLOR_NET.predict([Paint_img, Paint_img_embed])
     output = output * 128

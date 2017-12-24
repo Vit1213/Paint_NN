@@ -4,7 +4,7 @@ from skimage.io import imsave, imread
 def make_trainset():
     Images = []
     name_of_img = []
-    for filename in os.listdir('TrainSet/RGB/'):
+    for filename in os.listdir('TestSet/RGB/'):
         Images.append(imread('TrainSet/RGB/' + filename, as_grey=True))
         name_of_img.append(filename)
 
