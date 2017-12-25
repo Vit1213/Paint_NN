@@ -1,4 +1,4 @@
-from keras.models import Sequential, Model
+from keras.models import load_model, Model
 from keras.applications.inception_resnet_v2 import preprocess_input, InceptionResNetV2
 from keras.layers import Conv2D, UpSampling2D, Input, Reshape, concatenate
 from skimage.color import rgb2lab, lab2rgb, rgb2gray, gray2rgb
@@ -32,20 +32,7 @@ def image_a_b_gen(batch_size, datagen):
         Y_batch = lab_batch[:,:,:,1:] / 128
         yield ([X_batch, create_inception_embedding(grayscaled_rgb)], Y_batch)
 
-if __name__ == "__main__":
-    batch_size = 20
-    tf.reset_default_graph()
-    tensorboard = TensorBoard(log_dir="/output")
-    epoch = 10
-    X = []
-    for filename in os.listdir('TrainSet/RGB/'):
-        X.append(img_to_array(load_img('TrainSet/RGB/' + filename)))
-    X = np.array(X, dtype=float)
-    Xtrain = 1.0 / 255 * X
-
-    inception = InceptionResNetV2(weights=None, include_top=True)
-    inception.load_weights('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5')
-    inception.graph = tf.get_default_graph()
+def make_model():
     embed_input = Input(shape=(1000,))
 
     encoder_input = Input(shape=(256, 256, 1,))
@@ -73,7 +60,26 @@ if __name__ == "__main__":
     decoder_output = Conv2D(16, (3, 3), activation='relu', padding='same')(decoder_output)
     decoder_output = Conv2D(2, (3, 3), activation='tanh', padding='same')(decoder_output)
     decoder_output = UpSampling2D((2, 2))(decoder_output)
-    COLOR_NET = Model(inputs=[encoder_input, embed_input], outputs=decoder_output)
+    return Model(inputs=[encoder_input, embed_input], outputs=decoder_output)
+
+if __name__ == "__main__":
+    batch_size = 20
+    tf.reset_default_graph()
+    tensorboard = TensorBoard(log_dir="/output")
+    epoch = 10
+    X = []
+    for filename in os.listdir('TrainSet/RGB/'):
+        X.append(img_to_array(load_img('TrainSet/RGB/' + filename)))
+    X = np.array(X, dtype=float)
+    Xtrain = 1.0 / 255 * X
+
+    inception = InceptionResNetV2(weights=None, include_top=True)
+    inception.load_weights('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5')
+    inception.graph = tf.get_default_graph()
+    if not os.access("LEARN_DATA/My_Net.h5", os.R_OK):
+        COLOR_NET = make_model()
+    else:
+        COLOR_NET = load_model("LEARN_DATA/My_Net.h5")
     COLOR_NET.compile(optimizer='adam', loss='mse')
 
     datagen = ImageDataGenerator(

@@ -20,6 +20,8 @@ def create_inception_embedding(grayscaled_rgb):
     return embed
 
 if __name__ == "__main__":
+    if not os.access("LEARN_DATA/My_Net.h5", os.R_OK) or not os.access('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5', os.R_OK):
+        exit(1)
     COLOR_NET = load_model("LEARN_DATA/My_Net.h5")
     inception = InceptionResNetV2(weights=None, include_top=True)
     inception.load_weights('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5')
