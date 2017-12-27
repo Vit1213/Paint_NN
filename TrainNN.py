@@ -11,6 +11,10 @@ from skimage.transform import resize
 import os
 import tensorflow as tf
 
+Xtrain = []
+inception = object
+
+
 def create_inception_embedding(grayscaled_rgb):
     grayscaled_rgb_resized = []
     for i in grayscaled_rgb:
@@ -62,18 +66,42 @@ def make_model():
     decoder_output = UpSampling2D((2, 2))(decoder_output)
     return Model(inputs=[encoder_input, embed_input], outputs=decoder_output)
 
-if __name__ == "__main__":
-    batch_size = 20
+def begin_learn(epochs, batch_size, learn_path, no_pridict):
+    global Xtrain
+    global inception
+    batch_size = batch_size
     tf.reset_default_graph()
+    path = 'TrainSet/RGB/'
+
+    if learn_path:
+        if os.path.isdir(learn_path):
+            if len(os.listdir(learn_path)) != 0:
+                path = learn_path
+            else:
+                print("Папка {} пуста, используется путь по умолчанию".format(learn_path))
+        else:
+            print("Путь {} не является директорией, используется путь по умолчанию".format(learn_path))
+
+    if not os.path.isdir(path):
+        print("Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
+        os.makedirs(path, exist_ok=True)
+        exit(1)
+    elif os.listdir(path) == 0:
+        print("Папка {} пуста".format(path))
+        exit(1)
+
     tensorboard = TensorBoard(log_dir="/output")
-    epoch = 10
+    epoch = epochs
     X = []
-    for filename in os.listdir('TrainSet/RGB/'):
-        X.append(img_to_array(load_img('TrainSet/RGB/' + filename)))
+    for filename in os.listdir(path):
+        X.append(img_to_array(load_img(path + filename)))
     X = np.array(X, dtype=float)
     Xtrain = 1.0 / 255 * X
 
     inception = InceptionResNetV2(weights=None, include_top=True)
+    if not os.access('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5', os.R_OK):
+        print("Файл весов для нейросети-классификатора не доступен")
+        exit(1)
     inception.load_weights('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5')
     inception.graph = tf.get_default_graph()
     if not os.access("LEARN_DATA/My_Net.h5", os.R_OK):
@@ -87,31 +115,32 @@ if __name__ == "__main__":
         zoom_range=0.4,
         rotation_range=40,
         horizontal_flip=True)
-    COLOR_NET.fit_generator(image_a_b_gen(batch_size, datagen), callbacks=[tensorboard], epochs=epoch, steps_per_epoch=20)
+    COLOR_NET.fit_generator(image_a_b_gen(batch_size, datagen), callbacks=[tensorboard], epochs=epoch)
     COLOR_NET.save('LEARN_DATA/My_Net.h5')
     model_json = COLOR_NET.to_json()
     with open("model.json", "w") as json_file:
         json_file.write(model_json)
     COLOR_NET.save_weights("LEARN_DATA/color_tensorflow_real_mode.h5")
 
-    Paint_img = []
-    for filename in os.listdir('TrainSet/Grey/'):
-        Paint_img.append(img_to_array(load_img('TrainSet/Grey/' + filename)))
-    Paint_img = np.array(Paint_img, dtype=float)
-    Paint_img = 1.0 / 255 * Paint_img
-    Paint_img = gray2rgb(rgb2gray(Paint_img))
-    Paint_img_embed = create_inception_embedding(Paint_img)
-    Paint_img = rgb2lab(Paint_img)[:, :, :, 0]
-    Paint_img = Paint_img.reshape(Paint_img.shape + (1,))
+    if no_pridict:
+        Paint_img = []
+        for filename in os.listdir('TrainSet/Grey/'):
+            Paint_img.append(img_to_array(load_img('TrainSet/Grey/' + filename)))
+        Paint_img = np.array(Paint_img, dtype=float)
+        Paint_img = 1.0 / 255 * Paint_img
+        Paint_img = gray2rgb(rgb2gray(Paint_img))
+        Paint_img_embed = create_inception_embedding(Paint_img)
+        Paint_img = rgb2lab(Paint_img)[:, :, :, 0]
+        Paint_img = Paint_img.reshape(Paint_img.shape + (1,))
 
-    output = COLOR_NET.predict([Paint_img, Paint_img_embed])
-    output = output * 128
+        output = COLOR_NET.predict([Paint_img, Paint_img_embed])
+        output = output * 128
 
-    for i in range(len(output)):
-        cur = np.zeros((256, 256, 3))
-        cur[:,:,0] = Paint_img[i][:, :, 0]
-        cur[:,:,1:] = output[i]
-        imsave("TrainSet/Result/"+str(i)+".png", lab2rgb(cur))
+        for i in range(len(output)):
+            cur = np.zeros((256, 256, 3))
+            cur[:, :, 0] = Paint_img[i][:, :, 0]
+            cur[:, :, 1:] = output[i]
+            imsave("TrainSet/Result/" + str(i) + ".png", lab2rgb(cur))
 
 
 
