@@ -1,6 +1,7 @@
 import sys, os
 import argparse
-import TrainNN, Test, Make_TrainSet
+import TrainNN, Test, Make_TrainSet, Color_text
+import warnings
 
 
 def createParser(): # Парсинг аргументов командной строки
@@ -18,6 +19,7 @@ def createParser(): # Парсинг аргументов командной с�
                         const=True)
 
 if __name__ == "__main__":
+    warnings.simplefilter("ignore")
     args = createParser()
     namespace = args.parse_args(sys.argv[1:])
 

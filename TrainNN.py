@@ -10,10 +10,10 @@ import numpy as np
 from skimage.transform import resize
 import os
 import tensorflow as tf
+import Color_text
 
 Xtrain = []
 inception = object
-
 
 def create_inception_embedding(grayscaled_rgb):
     grayscaled_rgb_resized = []
@@ -67,6 +67,9 @@ def make_model():
 def begin_learn(epochs, batch_size, learn_path):
     global Xtrain
     global inception
+    ERROR = Color_text.get_ERROR_color_text()
+    WARNING = Color_text.get_WARNING_color_text()
+    OK = Color_text.get_OK_color_text()
     batch_size = batch_size
     tf.reset_default_graph()
     path = 'TrainSet/RGB/'
@@ -76,16 +79,16 @@ def begin_learn(epochs, batch_size, learn_path):
             if len(os.listdir(learn_path)) != 0:
                 path = learn_path
             else:
-                print("Папка {} пуста, используется путь по умолчанию".format(learn_path))
+                print(WARNING+"Папка {} пуста, используется путь по умолчанию".format(learn_path))
         else:
-            print("Путь {} не является директорией, используется путь по умолчанию".format(learn_path))
+            print(WARNING+"Путь {} не является директорией, используется путь по умолчанию".format(learn_path))
 
     if not os.path.isdir(path):
-        print("Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
+        print(ERROR+"Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
         os.makedirs(path, exist_ok=True)
         exit(1)
     elif os.listdir(path) == 0:
-        print("Папка {} пуста".format(path))
+        print(ERROR+"Папка {} пуста".format(path))
         exit(1)
 
     tensorboard = TensorBoard(log_dir="/output")
@@ -98,10 +101,11 @@ def begin_learn(epochs, batch_size, learn_path):
 
     inception = InceptionResNetV2(weights=None, include_top=True)
     if not os.access('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5', os.R_OK):
-        print("Файл весов для нейросети-классификатора не доступен")
+        print(ERROR+"Файл весов для нейросети-классификатора не доступен")
         exit(1)
     inception.load_weights('LEARN_DATA/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5')
     inception.graph = tf.get_default_graph()
+    print('Сборка модели...')
     if not os.access("LEARN_DATA/My_Net.h5", os.R_OK):
         COLOR_NET = make_model()
     else:
@@ -113,12 +117,16 @@ def begin_learn(epochs, batch_size, learn_path):
         zoom_range=0.4,
         rotation_range=40,
         horizontal_flip=True)
+    print('Запуск процедуры обучения...\n')
     COLOR_NET.fit_generator(image_a_b_gen(batch_size, datagen), callbacks=[tensorboard], epochs=epoch)
+    print(OK)
+    print("Сохраняю...")
     COLOR_NET.save('LEARN_DATA/My_Net.h5')
     model_json = COLOR_NET.to_json()
     with open("model.json", "w") as json_file:
         json_file.write(model_json)
     COLOR_NET.save_weights("LEARN_DATA/color_tensorflow_real_mode.h5")
+    print(OK)
 
 
 

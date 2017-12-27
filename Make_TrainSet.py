@@ -1,23 +1,28 @@
 import os, sys
 from skimage.io import imsave, imread
 from skimage.transform import resize
+import Color_text
 
 def make_gray_img(data_path):
     Images = []
     path = 'TrainSet/RGB/'
+
+    ERROR = Color_text.get_ERROR_color_text()
+    WARNING = Color_text.get_WARNING_color_text()
+    OK = Color_text.get_OK_color_text()
 
     if data_path:
         if os.path.isdir(data_path):
             if len(os.listdir(data_path)) != 0:
                 path = data_path
             else:
-                print("Папка {} пуста, используется путь по умолчанию".format(data_path))
+                print(WARNING+"Папка {} пуста, используется путь по умолчанию".format(data_path))
                 path = 'TrainSet/RGB/'
         else:
-            print("Путь {} не является директорией, используется путь по умолчанию".format(data_path))
+            print(WARNING+"Путь {} не является директорией, используется путь по умолчанию".format(data_path))
 
     if not os.path.isdir(path):
-        print("Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
+        print(ERROR+"Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
         os.makedirs(path, exist_ok=True)
         exit(1)
 
@@ -31,31 +36,35 @@ def make_gray_img(data_path):
         imsave('TrainSet/Grey/'+str(i), Images[i])
         progress = ((i * 100)//j) + 1
         sys.stdout.write("\rПрогресс: {} %   ".format(str(progress)))
-    print("\nDone")
+    print("\n"+OK)
 
 def make_trainset(data_path):
     Images = []
     path = 'TrainSet/RGB/'
+
+    ERROR = Color_text.get_ERROR_color_text()
+    WARNING = Color_text.get_WARNING_color_text()
+    OK = Color_text.get_OK_color_text()
 
     if data_path:
         if os.path.isdir(data_path):
             if len(os.listdir(data_path)) != 0:
                 path = data_path
             else:
-                print("Папка {} пуста, используется путь по умолчанию".format(data_path))
+                print(WARNING+"Папка {} пуста, используется путь по умолчанию".format(data_path))
                 path = 'TrainSet/RGB/'
         else:
-            print("Путь {} не является директорией, используется путь по умолчанию".format(data_path))
+            print(WARNING+"Путь {} не является директорией, используется путь по умолчанию".format(data_path))
 
     if not os.path.isdir(path):
-        print("Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
+        print(ERROR+"Стандартный путь не доступен! Но мы его создали, заполните папку {} красивыми картиночками".format(path))
         os.makedirs(path, exist_ok=True)
         exit(1)
 
     for filename in os.listdir(path):
         img = imread(path + filename)
         if img.shape < (128, 128, 3):
-            print("Изображение {} имеет слишком маллый размер, из выборки удален".format(filename))
+            print(WARNING+"Изображение {} имеет слишком маллый размер, из выборки удален".format(filename))
             os.remove(path+filename)
             continue
         Images.append(img)
@@ -69,4 +78,4 @@ def make_trainset(data_path):
         imsave(path + str(i), img)
         progress = ((i * 100) // j) + 1
         sys.stdout.write("\rПрогресс: {} %   ".format(str(progress)))
-    print("\nDone")
+    print("\n"+OK)
