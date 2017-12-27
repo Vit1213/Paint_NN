@@ -49,13 +49,11 @@ def make_model():
     encoder_output = Conv2D(512, (3, 3), activation='relu', padding='same')(encoder_output)
     encoder_output = Conv2D(256, (3, 3), activation='relu', padding='same')(encoder_output)
 
-    # Fusion
     fusion_output = RepeatVector(32 * 32)(embed_input)
     fusion_output = Reshape(([32, 32, 1000]))(fusion_output)
     fusion_output = concatenate([encoder_output, fusion_output], axis=3)
     fusion_output = Conv2D(256, (1, 1), activation='relu', padding='same')(fusion_output)
 
-    # Decoder
     decoder_output = Conv2D(128, (3, 3), activation='relu', padding='same')(fusion_output)
     decoder_output = UpSampling2D((2, 2))(decoder_output)
     decoder_output = Conv2D(64, (3, 3), activation='relu', padding='same')(decoder_output)
@@ -66,7 +64,7 @@ def make_model():
     decoder_output = UpSampling2D((2, 2))(decoder_output)
     return Model(inputs=[encoder_input, embed_input], outputs=decoder_output)
 
-def begin_learn(epochs, batch_size, learn_path, no_pridict):
+def begin_learn(epochs, batch_size, learn_path):
     global Xtrain
     global inception
     batch_size = batch_size
@@ -121,26 +119,6 @@ def begin_learn(epochs, batch_size, learn_path, no_pridict):
     with open("model.json", "w") as json_file:
         json_file.write(model_json)
     COLOR_NET.save_weights("LEARN_DATA/color_tensorflow_real_mode.h5")
-
-    if no_pridict:
-        Paint_img = []
-        for filename in os.listdir('TrainSet/Grey/'):
-            Paint_img.append(img_to_array(load_img('TrainSet/Grey/' + filename)))
-        Paint_img = np.array(Paint_img, dtype=float)
-        Paint_img = 1.0 / 255 * Paint_img
-        Paint_img = gray2rgb(rgb2gray(Paint_img))
-        Paint_img_embed = create_inception_embedding(Paint_img)
-        Paint_img = rgb2lab(Paint_img)[:, :, :, 0]
-        Paint_img = Paint_img.reshape(Paint_img.shape + (1,))
-
-        output = COLOR_NET.predict([Paint_img, Paint_img_embed])
-        output = output * 128
-
-        for i in range(len(output)):
-            cur = np.zeros((256, 256, 3))
-            cur[:, :, 0] = Paint_img[i][:, :, 0]
-            cur[:, :, 1:] = output[i]
-            imsave("TrainSet/Result/" + str(i) + ".png", lab2rgb(cur))
 
 
 

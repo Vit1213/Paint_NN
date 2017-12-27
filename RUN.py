@@ -10,11 +10,12 @@ def createParser(): # Парсинг аргументов командной с�
     parser.add_argument('-e', '--epochs', help="Количество эпох тренеровки нейросети (по умолчанию 1000)", default=1000, type=int)
     parser.add_argument('-b', '--batch_size', help="Размер партии для тренеровки (по умолчанию 3 для экономии ОЗУ)", default=3,
                         type=int)
-    parser.add_argument('-mg', '--make_gray', help="Сделать черно-белые изображения из цветных", action='store_const', const=True)
+    parser.add_argument('--make_gray', help="Сделать черно-белые изображения из цветных", action='store_const', const=True)
     parser.add_argument('-in', '--input_data', help="Путь к входных данным для обработки", default=None, type=str)
-    parser.add_argument('-lrn_dt', '--learn_data', help="Путь к тренеровачному набору", default=None, type=str)
-    parser.add_argument('--no_pridict', help="После обучения не обрабатывать картинки", action='store_const',
-                        const=False)
+    parser.add_argument('--paint', help="После обучения не обрабатывать картинки", action='store_const',
+                        const=True)
+    parser.add_argument('--make_trainset', help="Форматировать изображения для обучения", action='store_const',
+                        const=True)
 
 if __name__ == "__main__":
     args = createParser()
@@ -28,4 +29,9 @@ if __name__ == "__main__":
     if namespace.make_gray:
         Make_TrainSet.make_gray_img(data_path)
     if namespace.begin_learn:
-        TrainNN.begin_learn(epochs, batch_size, learn_path, namespace.no_pridict)
+        TrainNN.begin_learn(epochs, batch_size, data_path)
+    if namespace.paint:
+        Test.begin_paint_img(data_path)
+    if namespace.make_trainset:
+        Make_TrainSet.make_trainset(data_path)
+
